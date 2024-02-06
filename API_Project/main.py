@@ -38,19 +38,20 @@ def create_dataframe(pages_content: list[dict]) -> pd.DataFrame:
     try:
         for i in range(len(pages_content)):
             for j in range(pages_content[i]["response"]["pageSize"]):
+                results_field = pages_content[i]["response"]["results"][j]
                 content_fields = dict(
-                    id=pages_content[i]["response"]["results"][j]["id"],
-                    type=pages_content[i]["response"]["results"][j]["type"],
-                    sectionId=pages_content[i]["response"]["results"][j]["sectionId"],
-                    sectionName=pages_content[i]["response"]["results"][j]["sectionName"],
-                    webPublicationDate=pages_content[i]["response"]["results"][j]["webPublicationDate"],
-                    webTitle=pages_content[i]["response"]["results"][j]["webTitle"],
-                    webUrl=pages_content[i]["response"]["results"][j]["webUrl"],
-                    apiUrl=pages_content[i]["response"]["results"][j]["apiUrl"],
-                    isHosted=pages_content[i]["response"]["results"][j]["isHosted"],
-                    pillarId=pages_content[i]["response"]["results"][j]["pillarId"],
-                    pillarName=pages_content[i]["response"]["results"][j]["pillarName"],
-                    Wordcount=pages_content[i]["response"]["results"][j]["fields"]["wordcount"]
+                    id=results_field["id"],
+                    type=results_field["type"],
+                    sectionId=results_field["sectionId"],
+                    sectionName=results_field["sectionName"],
+                    webPublicationDate=results_field["webPublicationDate"],
+                    webTitle=results_field["webTitle"],
+                    webUrl=results_field["webUrl"],
+                    apiUrl=results_field["apiUrl"],
+                    isHosted=results_field["isHosted"],
+                    pillarId=results_field["pillarId"],
+                    pillarName=results_field["pillarName"],
+                    Wordcount=results_field["fields"]["wordcount"]
                 )
                 data.append(content_fields)
     except IndexError:
