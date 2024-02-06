@@ -38,17 +38,14 @@ def create_dataframe(pages_content: list[dict]) -> pd.DataFrame:
     # All the columns for the CSV file except the Wordcount field.
     column_names = ["id", "type", "sectionId", "sectionName", "webPublicationDate", "webTitle", "webUrl", "apiUrl",
                     "isHosted", "pillarId", "pillarName"]
-    # The try-except block is necessary in case there are fewer articles on the last page than `pageSize`.
-    try:
-        for i in range(len(pages_content)):
-            response_field = pages_content[i]["response"]
-            for j in range(response_field["pageSize"]):
-                results_field = response_field["results"][j]
-                content_fields = {name: results_field[name] for name in column_names}
-                content_fields["Wordcount"] = results_field["fields"]["wordcount"]
-                data.append(content_fields)
-    except IndexError:
-        print("Data is prepared")
+
+    for i in range(len(pages_content)):
+        response_field = pages_content[i]["response"]
+        for j in range(response_field["pageSize"]):
+            results_field = response_field["results"][j]
+            content_fields = {name: results_field[name] for name in column_names}
+            content_fields["Wordcount"] = results_field["fields"]["wordcount"]
+            data.append(content_fields)
 
     df = pd.DataFrame(data)
     return df
