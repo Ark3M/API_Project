@@ -7,11 +7,15 @@ import requests
 def configure():
     load_dotenv()
 
-
-# Get a URL for each page of content.
-def get_page_url(url: str) -> list[str]:
-    response = requests.get(url).json()
-    page_amount = response["response"]["pages"]
+"""
+Get a URL for each page of content. It's important to specify the amount of pages 
+from which we want to retrieve the articles. This number should be kept below 500 per day due to the API's limitation.
+Refer to the Developer section at https://open-platform.theguardian.com/access/ for more information.
+"""
+def get_page_url(url: str, page_amount: int = None) -> list[str]:
+    if page_amount is None:
+        response = requests.get(url).json()
+        page_amount = response["response"]["pages"]
     pages_urls = []
     for i in range(1, page_amount+1):
         each_page_url = url + f"&page={i}"
@@ -22,7 +26,7 @@ def get_page_url(url: str) -> list[str]:
 # Get a json for each page of content.
 def get_page_content(urls: list[str]) -> list[dict]:
     pages_content = []
-    for url in urls[0:2]:
+    for url in urls:
         response = requests.get(url).json()
         pages_content.append(response)
     return pages_content
@@ -76,10 +80,13 @@ def modify_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def main():
     configure()
-    initial_url = (f"https://content.guardianapis.com/search?q=elections%20OR%20Brexit&api-key={os.getenv("API_KEY")}"
-                   f"&show-fields=wordcount")
-    pages_urls = get_page_url(url=initial_url)
+
+    base_url = "https://content.guardianapis.com/search"
+    main_url = f"{base_url}?q=elections%20OR%20Brexit&api-key={os.getenv("API_KEY")}&show-fields=wordcount"
+
+    pages_urls = get_page_url(url=main_url, page_amount=3)
     pages_content = get_page_content(urls=pages_urls)
+
     raw_df = create_dataframe(pages_content)
     df = modify_dataframe(df=raw_df)
     df.to_csv("data.csv", index=False)
