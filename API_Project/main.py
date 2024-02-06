@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 import requests
+from urllib.parse import urljoin
 
 
 def configure():
@@ -34,25 +35,17 @@ def get_page_content(urls: list[str]) -> list[dict]:
 
 def create_dataframe(pages_content: list[dict]) -> pd.DataFrame:
     data = []
+    # All the columns for the CSV file except the Wordcount field.
+    column_names = ["id", "type", "sectionId", "sectionName", "webPublicationDate", "webTitle", "webUrl", "apiUrl",
+                    "isHosted", "pillarId", "pillarName"]
     # The try-except block is necessary in case there are fewer articles on the last page than `pageSize`.
     try:
         for i in range(len(pages_content)):
-            for j in range(pages_content[i]["response"]["pageSize"]):
-                results_field = pages_content[i]["response"]["results"][j]
-                content_fields = dict(
-                    id=results_field["id"],
-                    type=results_field["type"],
-                    sectionId=results_field["sectionId"],
-                    sectionName=results_field["sectionName"],
-                    webPublicationDate=results_field["webPublicationDate"],
-                    webTitle=results_field["webTitle"],
-                    webUrl=results_field["webUrl"],
-                    apiUrl=results_field["apiUrl"],
-                    isHosted=results_field["isHosted"],
-                    pillarId=results_field["pillarId"],
-                    pillarName=results_field["pillarName"],
-                    Wordcount=results_field["fields"]["wordcount"]
-                )
+            response_field = pages_content[i]["response"]
+            for j in range(response_field["pageSize"]):
+                results_field = response_field["results"][j]
+                content_fields = {name: results_field[name] for name in column_names}
+                content_fields["Wordcount"] = results_field["fields"]["wordcount"]
                 data.append(content_fields)
     except IndexError:
         print("Data is prepared")
@@ -83,7 +76,13 @@ def main():
     configure()
 
     base_url = "https://content.guardianapis.com/search"
-    main_url = f"{base_url}?q=elections%20OR%20Brexit&api-key={os.getenv("API_KEY")}&show-fields=wordcount"
+    query_params = {
+        "q": "elections OR Brexit",
+        "api-key": os.getenv("API_KEY"),
+        "show-fields": "wordcount"
+    }
+
+    main_url = urljoin(base_url, "?" + "&".join([f"{key}={value}" for key, value in query_params.items()]))
 
     pages_urls = get_page_url(url=main_url, page_amount=3)
     pages_content = get_page_content(urls=pages_urls)
